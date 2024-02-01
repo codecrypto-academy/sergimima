@@ -21,7 +21,10 @@ app.get("/faucet/:address", async(req, res) => {
 
     const txSigned = await account.signTransaction(tx)
     const respuesta = await web3.eth.sendSignedTransaction(txSigned.rawTransaction)
-    res.send(JSON.stringify(respuesta))
+    const receiptString = JSON.stringify(respuesta, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+    );
+    res.send(receiptString)
 })
 
 app.get("/balance/:address", async (req, res) => {

@@ -1,9 +1,11 @@
 const {Web3} = require("web3")
 const exp = require("express")
 const fs = require("fs")
+const cors = require("cors")
 
 const web3 = new Web3("http://localhost:8545")
 const app = exp();
+app.use(cors())
 const json = JSON.parse(fs.readFileSync("../nodo/data/keystore/UTC--2024-01-31T15-32-11.684783726Z--4624b064603f8e4c0e8cd4a8d68cea24afd868ab"))
 
 

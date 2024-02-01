@@ -21,7 +21,7 @@ app.get("/faucet/:address", async(req, res) => {
 
     const txSigned = await account.signTransaction(tx)
     const respuesta = await web3.eth.sendSignedTransaction(txSigned.rawTransaction)
-    res.send(respuesta)
+    res.send(JSON.stringify(respuesta))
 })
 
 app.get("/balance/:address", async (req, res) => {

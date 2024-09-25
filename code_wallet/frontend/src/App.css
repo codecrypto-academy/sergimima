@@ -1,12 +1,12 @@
 .App {
     text-align: center;
-    width: 300px;
+    width: 350px;
     height: 600px;
     justify-content: flex-start;
     align-items: center;
     display: flex;
     flex-direction: column;
-    background-color: aqua;
+
 }
 
 .frontPageLogo {

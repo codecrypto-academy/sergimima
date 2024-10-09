@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const WarehouseList = () => {
   const [warehouses, setWarehouses] = useState([]);
-  const [newWarehouse, setNewWarehouse] = useState({ name: '', location: '' });
+  const [newWarehouse, setNewWarehouse] = useState({ name: '', email: '' , password: '' , ubicacion: '', wallet_address: '' });
 
   useEffect(() => {
     fetchWarehouses();
@@ -37,7 +37,7 @@ const WarehouseList = () => {
       console.error('Error creating warehouse:', error);
     }
   };
-
+//INSERT INTO Almacenes (name, email, password, ubicacion)
   return (
     <div>
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Gestión de Almacenes</h2>
@@ -57,7 +57,7 @@ const WarehouseList = () => {
           </li>
         ))}
       </ul>
-      <div className="mb-4">
+      <div className="mb-4 ">
         <h3 className="text-xl font-semibold text-gray-700 mb-2">Crear Nuevo Almacén</h3>
         <input
           type="text"
@@ -68,9 +68,30 @@ const WarehouseList = () => {
         />
         <input
           type="text"
+          placeholder="Email"
+          value={newWarehouse.name}
+          onChange={(e) => setNewWarehouse({ ...newWarehouse, email: e.target.value })}
+          className="mb-2 p-2 border rounded w-full"
+        />
+        <input
+          type="text"
+          placeholder="Password"
+          value={newWarehouse.name}
+          onChange={(e) => setNewWarehouse({ ...newWarehouse, password: e.target.value })}
+          className="mb-2 p-2 border rounded w-full"
+        />
+        <input
+          type="text"
           placeholder="Ubicación"
           value={newWarehouse.location}
           onChange={(e) => setNewWarehouse({ ...newWarehouse, location: e.target.value })}
+          className="mb-2 p-2 border rounded w-full"
+        />
+        <input
+          type="text"
+          placeholder="Wallet Address"
+          value={newWarehouse.location}
+          onChange={(e) => setNewWarehouse({ ...newWarehouse, wallet_address: e.target.value })}
           className="mb-2 p-2 border rounded w-full"
         />
         <button

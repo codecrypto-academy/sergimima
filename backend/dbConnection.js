@@ -62,9 +62,9 @@ app.get('/warehouse', (req, res) => {
 });
 
 app.post('/warehouse', (req, res) => {
-  const { name, email, password, ubicacion} = req.body;
-  const query = 'INSERT INTO Almacenes (name, email, password, ubicacion) VALUES (?, ?, ?, ?)';
-  connection.query(query, [name, email, password, ubicacion], (error, results) => {
+  const { name, email, password, ubicacion, wallet_address} = req.body;
+  const query = 'INSERT INTO Almacenes (name, email, password, ubicacion, wallet_address ) VALUES (?, ?, ?, ?, ?)';
+  connection.query(query, [name, email, password, ubicacion, wallet_address], (error, results) => {
     if (error) {
       return res.status(500).json({ error });
     }

@@ -1,6 +1,7 @@
 // src/components/Header.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import ThemeToggle from '../assets/ThemeToggle';
 
 const Header = ({ children, title }) => {
   const navigate = useNavigate();
@@ -16,12 +17,15 @@ const Header = ({ children, title }) => {
         <div className="text-2xl font-bold tracking-wide">{title}</div>
         {children}
       </div>
-      <button
-        onClick={handleLogout}
-        className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-300 ease-in-out transform hover:scale-105"
-      >
-        Logout
-      </button>
+      <div className="flex items-center space-x-4">
+        <ThemeToggle />
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-300 ease-in-out transform hover:scale-105"
+        >
+          Logout
+        </button>
+      </div>
     </header>
   );
 };

@@ -38,3 +38,6 @@ next-env.d.ts
 /backend/node_modules
 
 ETHEREUM-TRACKING-CHAIN-PLANTEAMIENTO.pdf
+
+/blockchain/node_modules
+/blockchain/test

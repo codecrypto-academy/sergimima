@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Header = ({ children }) => {
+const Header = ({ children, title }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -11,17 +11,17 @@ const Header = ({ children }) => {
   };
 
   return (
-    <header className="bg-blue-500 text-white p-4 flex justify-between items-center">
-      <div className="text-xl font-bold">Mi Aplicación</div>
-      <div className="flex items-center">
+    <header className="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-4 shadow-lg flex justify-between items-center">
+      <div className="flex items-center space-x-4">
+        <div className="text-2xl font-bold tracking-wide">{title}</div>
         {children}
-        <button
-          onClick={handleLogout}
-          className="ml-4 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-        >
-          Logout
-        </button>
       </div>
+      <button
+        onClick={handleLogout}
+        className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-300 ease-in-out transform hover:scale-105"
+      >
+        Logout
+      </button>
     </header>
   );
 };

@@ -76,6 +76,11 @@ CREATE TABLE Productos (
     FOREIGN KEY (minorista_id) REFERENCES Minoristas(minorista_id)
 );
 
+ALTER TABLE Almacenes ADD COLUMN wallet_address VARCHAR(255);
+ALTER TABLE Distribuidores ADD COLUMN wallet_address VARCHAR(255);
+ALTER TABLE Minoristas ADD COLUMN wallet_address VARCHAR(255);
+ALTER TABLE Productores ADD COLUMN wallet_address VARCHAR(255);
+
 
 # Añadimos un admin
 INSERT INTO Admins (nombre ,email, contraseña) VALUES ('sergi', 'sergimima@gmail.com','test');

@@ -28,15 +28,7 @@ connection.connect(err => {
   console.log('Connected to the database');
 });
 
-app.get('/admins', (req, res) => {
-  connection.query('SELECT * FROM admins', (error, results) => {
-    if (error) {
-      return res.status(500).json({ error });
-    }
-    res.json(results);
-  });
-});
-
+// Loguin
 app.post('/login', (req, res) => {
   const {role, email, password,  } = req.body;
 
@@ -56,6 +48,41 @@ app.post('/login', (req, res) => {
     res.json(results);
   });
 });
+
+// Admin
+
+app.get('/warehouse', (req, res) => {
+  const query = 'SELECT * FROM warehouse';
+  connection.query(query, (error, results) => {
+    if (error) {
+      return res.status(500).json({ error });
+    }
+    res.json(results);
+  });
+});
+
+app.post('/warehouse', (req, res) => {
+  const { name, email, password, ubicacion} = req.body;
+  const query = 'INSERT INTO Almacenes (name, email, password, ubicacion) VALUES (?, ?, ?, ?)';
+  connection.query(query, [name, email, password, ubicacion], (error, results) => {
+    if (error) {
+      return res.status(500).json({ error });
+    }
+    res.json(results);
+  });
+});
+
+app.get('/produsers', (req, res) => {
+  const query = 'SELECT * FROM produsers';
+  connection.query(query, (error, results) => {
+    if (error) {
+      return res.status(500).json({ error });
+    }
+    res.json(results);
+  });
+});
+
+
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

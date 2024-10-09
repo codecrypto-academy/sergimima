@@ -1,11 +1,24 @@
 // src/App.jsx
 import React from 'react';
+import Admin from './components/organitzations/Admin';
+import PrivateRoute from './components/PrivateRoute';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';import Login from './components/Login';
 
 const App = () => {
   return (
-    <div dark:bg-slate-800 className="text-3xl font-bold underline">
-      {/* Puedes dejar esto vacío o agregar contenido si es necesario */}
-    </div>
+    <React.StrictMode>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/admin" element={
+          <PrivateRoute>
+            <Admin />
+          </PrivateRoute>
+        } />
+      </Routes>
+    </Router>
+  </React.StrictMode>
   );
 };
 

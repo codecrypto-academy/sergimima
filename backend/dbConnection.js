@@ -28,7 +28,7 @@ connection.connect(err => {
   console.log('Connected to the database');
 });
 
-// Loguin
+// Login
 app.post('/login', (req, res) => {
   const {role, email, password,  } = req.body;
 
@@ -49,10 +49,57 @@ app.post('/login', (req, res) => {
   });
 });
 
-// Admin
+// Admin - Usuarios
+
+// Admin - Productores
+
+app.get('/produsers', (req, res) => {
+  const query = 'SELECT * FROM Productores';
+  connection.query(query, (error, results) => {
+    if (error) {
+      return res.status(500).json({ error });
+    }
+    res.json(results);
+  });
+});
+
+app.post('/produsers', (req, res) => {
+  const { nombre, email, password, ubicacion, wallet_address } = req.body;
+  const query = 'INSERT INTO Productores (nombre, email, password, ubicacion, creado_en, wallet_address) VALUES (?, ?, ?, ?, NOW(), ?)';
+
+  connection.query(query, [nombre, email, password, ubicacion, wallet_address], (error, results) => {
+    if (error) {
+      console.error('Error en la inserción:', error);
+      return res.status(500).json({ 
+        message: 'Error al insertar el productor', 
+        error: error.message,
+        sqlMessage: error.sqlMessage
+      });
+    }
+    res.json({ message: 'Productor insertado con éxito', id: results.insertId });
+  });
+})
+
+;app.delete('/produsers/:id', (req, res) => {
+  const { id } = req.params;
+  const query = 'DELETE FROM Productores WHERE productor_id = ?';
+  connection.query(query, [id], (error, results) => {
+    if (error) {
+      return res.status(500).json({ error });
+    }
+    res.json(results);
+  });
+});
+
+// 
+
+
+
+
+// Admin - Almacen
 
 app.get('/warehouse', (req, res) => {
-  const query = 'SELECT * FROM warehouse';
+  const query = 'SELECT * FROM Almacenes';
   connection.query(query, (error, results) => {
     if (error) {
       return res.status(500).json({ error });
@@ -63,8 +110,21 @@ app.get('/warehouse', (req, res) => {
 
 app.post('/warehouse', (req, res) => {
   const { name, email, password, ubicacion, wallet_address} = req.body;
-  const query = 'INSERT INTO Almacenes (name, email, password, ubicacion, wallet_address ) VALUES (?, ?, ?, ?, ?)';
+  const query = 'INSERT INTO Almacenes (nombre, email, password, ubicacion, wallet_address ) VALUES (?, ?, ?, ?, ?)';
   connection.query(query, [name, email, password, ubicacion, wallet_address], (error, results) => {
+    if (error) {
+      console.log(query(query, [name, email, password, ubicacion, wallet_address]));
+      return res.status(500).json({ error });
+      
+    }
+    res.json(results);
+  });
+});
+
+app.delete('/warehouse/:id', (req, res) => {
+  const { id } = req.params;
+  const query = 'DELETE FROM Almacenes WHERE almacen_id = ?';
+  connection.query(query, [id], (error, results) => {
     if (error) {
       return res.status(500).json({ error });
     }
@@ -72,18 +132,14 @@ app.post('/warehouse', (req, res) => {
   });
 });
 
-app.get('/produsers', (req, res) => {
-  const query = 'SELECT * FROM produsers';
-  connection.query(query, (error, results) => {
-    if (error) {
-      return res.status(500).json({ error });
-    }
-    res.json(results);
-  });
-});
+// Admin - Mayoristas
+// Admin - Minoristas
+
+// Admin - Productos
 
 
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
+

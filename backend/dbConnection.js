@@ -91,7 +91,20 @@ app.post('/produsers', (req, res) => {
   });
 });
 
-// 
+app.get('/produsers', (req, res) => {
+  const query = `
+    SELECT p.productor_id, p.nombre, p.email, p.ubicacion, p.wallet_address, p.creado_en, pr.product_id, pr.nombre AS product_name
+    FROM Productores p
+    LEFT JOIN Productos pr ON p.productor_id = pr.producer_id
+  `;
+  connection.query(query, (error, results) => {
+    if (error) {
+      return res.status(500).json({ error });
+    }
+    res.json(results);
+  });
+});
+
 
 
 

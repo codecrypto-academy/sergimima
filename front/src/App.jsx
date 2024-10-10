@@ -19,7 +19,7 @@ const App = () => {
         } />
         <Route path="/Productores" element={
           <PrivateRoute>
-            <Productor />
+            <Productor producerId={localStorage.getItem('userId')} />
           </PrivateRoute>
         } />
       </Routes>

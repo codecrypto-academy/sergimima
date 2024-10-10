@@ -1,6 +1,7 @@
 // src/App.jsx
 import React from 'react';
 import Admin from './components/organitzations/Admin';
+import Productor from './components/organitzations/Productor';
 import PrivateRoute from './components/PrivateRoute';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';import Login from './components/Login';
 
@@ -14,6 +15,11 @@ const App = () => {
         <Route path="/admin" element={
           <PrivateRoute>
             <Admin />
+          </PrivateRoute>
+        } />
+        <Route path="/Productores" element={
+          <PrivateRoute>
+            <Productor />
           </PrivateRoute>
         } />
       </Routes>

@@ -21,8 +21,29 @@ const Login = () => {
       if (response.status === 200) {
         console.log('Logged in successfully:', response.data);
         localStorage.setItem('isAuthenticated', 'true');
-        setError(''); // Clear any previous error
-        navigate('/admin');
+        localStorage.setItem('userRole', role);  // Add this line
+        setError('');
+
+        // Route based on role
+        switch (role) {
+          case 'Admins':
+            navigate('/admin');
+            break;
+          case 'Productores':
+            navigate('/Productores');
+            break;
+          case 'Almacenes':
+            navigate('/almacen');
+            break;
+          case 'Distribuidores':
+            navigate('/distribuidor');
+            break;
+          case 'Minoristas':
+            navigate('/minorista');
+            break;
+          default:
+            navigate('/');
+        }
       } else {
         setError('Login failed. Please check your credentials and try again.');
         console.log('Login failed:', response.data);
@@ -34,7 +55,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100 dark:bg-slate-800">
+    <div className="flex justify-center items-center h-screen ">
       <div className="w-full max-w-md p-8 bg-white dark:bg-gray-900 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-700 dark:text-gray-100">Login</h2>
         {error && <div className="mb-4 text-red-500 text-center">{error}</div>}
@@ -45,7 +66,7 @@ const Login = () => {
             placeholder="Enter your email"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border rounded-lg text-gray-800 bg-white dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="mb-4">
@@ -55,7 +76,7 @@ const Login = () => {
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border rounded-lg text-gray-800 bg-white dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="mb-6">
@@ -63,7 +84,7 @@ const Login = () => {
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border rounded-lg text-gray-800 bg-white dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select your role</option>
             <option value="Admins">Admin</option>
@@ -73,7 +94,6 @@ const Login = () => {
             <option value="Minoristas">Minorista</option>
           </select>
         </div>
-        
         <button
           onClick={handleLogin}
           className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -40,9 +40,11 @@ app.post('/login', (req, res) => {
   const query = `SELECT * FROM ${role} WHERE email = ? AND password = ?`;
   connection.query(query, [email, password], (error, results) => {
     if (error) {
+      //console.log(query);
       return res.status(500).json({ error });
     }
     if (results.length === 0) {
+      //console.log(query, [email, password]);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
     res.json(results);

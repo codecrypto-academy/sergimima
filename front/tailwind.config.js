@@ -19,7 +19,9 @@ module.exports = {
           900: '#09090b',
         },
       },
+      animation: {
+        gradient: 'gradient-animation 6s ease infinite',
+      },
     },
-  },
-  plugins: [],
+  },  plugins: [],
 }

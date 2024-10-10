@@ -1,12 +1,45 @@
-## TRACKING CHAIN PROJECT
+## TrackingChain Project
 
-# Setu up docker and database
+TrackingChain is a comprehensive supply chain management system that tracks products from producers to retailers, ensuring transparency and efficiency throughout the process.
 
-docker pull mysql:latest
-docker run --name trackingchain -e MYSQL_ROOT_PASSWORD=test -p 3306:3306 -d mysql:8.0
+## Features
+
+- User Management: Admins, Producers, Warehouses, Distributors, and Retailers
+- Product Tracking: From creation to final sale
+- Blockchain Integration: Wallet addresses for secure transactions
+- Timestamp Tracking: Monitor product movement through the supply chain
+
+## Technologies Used
+
+- Database: MySQL 8.0
+- Containerization: Docker
+- Backend: [Your backend technology, e.g., Node.js, Python, etc.]
+- Frontend: [Your frontend technology, e.g., React, Vue.js, etc.]
+- Blockchain: [Your blockchain technology, e.g., Ethereum, Hyperledger, etc.]
+
+## Setup
+
+### Docker and Database
+
+1. Pull the MySQL Docker image:
+   
+   
+   docker pull mysql:latest
+   
+
+2. Run the MySQL container:
+   
+   
+   docker run --name trackingchain -e MYSQL_ROOT_PASSWORD=test -p 3306:3306 -d mysql:8.0
+   
+
+### Database Setup
+
+Use a database management tool like DBeaver to set up the database and tables:
+
+1. Create the database:
 
 
-# Set up the database and tables with Dbeaver
 CREATE DATABASE trackingchain;
 
 USE trackingchain;
@@ -15,7 +48,7 @@ CREATE TABLE Admins (
     admin_id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    contraseña VARCHAR(255) NOT NULL,  -- Asegúrate de que se cifre adecuadamente en el backend
+    contraseña VARCHAR(255) NOT NULL,  -- Ensure proper encryption in the backend
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -55,9 +88,6 @@ CREATE TABLE Minoristas (
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-
-
 CREATE TABLE Productos (
     producto_id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -81,6 +111,18 @@ ALTER TABLE Distribuidores ADD COLUMN wallet_address VARCHAR(255);
 ALTER TABLE Minoristas ADD COLUMN wallet_address VARCHAR(255);
 ALTER TABLE Productores ADD COLUMN wallet_address VARCHAR(255);
 
+-- Add an admin
+INSERT INTO Admins (nombre, email, contraseña) VALUES ('sergi', 'sergimima@gmail.com', 'test');
 
-# Añadimos un admin
-INSERT INTO Admins (nombre ,email, contraseña) VALUES ('sergi', 'sergimima@gmail.com','test');
+
+## Running the Application
+
+[Provide instructions on how to run your backend and frontend applications]
+
+## Contributing
+
+[Provide guidelines for contributing to the project]
+
+## License
+
+[Specify the license under which your project is released]

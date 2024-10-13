@@ -22,27 +22,31 @@ const Login = () => {
         console.log('Logged in successfully:', response.data);
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userRole', role);
-              let userId;
-              switch (role) {
-                case 'Admins':
-                  userId = response.data.user.admin_id;
-                  break;
-                case 'Productores':
-                  userId = response.data.user.productor_id;
-                  break;
-                case 'Almacenes':
-                  userId = response.data.user.almacen_id;
-                  break;
-                case 'Distribuidores':
-                  userId = response.data.user.distribuidor_id;
-                  break;
-                case 'Minoristas':
-                  userId = response.data.user.minorista_id;
-                  break;
-                default:
-                  userId = null;
-              }
-              localStorage.setItem('userId', userId);        setError('');
+        let userId;
+        switch (role) {
+          case 'Admins':
+            navigate('/admin');
+            break;
+          case 'Productores':
+            userId = response.data.user.productor_id;
+            navigate('/Productores');
+            break;
+          case 'Almacenes':
+            userId = response.data.user.almacen_id;
+            navigate('/Almacenes');
+            break;
+          case 'Distribuidores':
+            userId = response.data.user.distribuidor_id;
+            navigate('/Distribuidores');
+            break;
+          case 'Minoristas':
+            userId = response.data.user.minorista_id;
+            navigate('/Minoristas');
+            break;
+          default:
+            userId = null;
+        }
+        localStorage.setItem('userId', userId); setError('');
 
         // Route based on role
         switch (role) {
@@ -56,10 +60,10 @@ const Login = () => {
             navigate('/almacen');
             break;
           case 'Distribuidores':
-            navigate('/distribuidor');
+            navigate('/Distribuidores');
             break;
           case 'Minoristas':
-            navigate('/minorista');
+            navigate('/Minoristas');
             break;
           default:
             navigate('/');

@@ -2,21 +2,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-  const ProductorList = ({ contract, registerProducerOnBlockchain }) => {
-    const [producers, setProducers] = useState([]);
-    const [newProducer, setNewProducer] = useState({ nombre: '', email: '', password: '', ubicacion: '', wallet_address: '' });
+  const MayoristaList = ({ contract, registerOrganizationOnBlockchain }) => {
+    const [wholesalers, setWholesalers] = useState([]);
+    const [newWholesaler, setNewWholesaler] = useState({ nombre: '', email: '', password: '', ubicacion: '', wallet_address: '' });
     const [showForm, setShowForm] = useState(false);
     const [error, setError] = useState(null);
 
 
     useEffect(() => {
-      fetchProducers();
+      fetchWholesalers();
     }, []);
 
-    const fetchProducers = async () => {
+    const fetchWholesalers = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/produsers');
-        setProducers(response.data);
+        const response = await axios.get('http://localhost:3001/wholesalers');
+        setWholesalers(response.data);
       } catch (error) {
         console.error('Error fetching producers:', error);
       }
@@ -24,8 +24,8 @@ import axios from 'axios';
 
     const handleDelete = async (id) => {
       try {
-        await axios.delete(`http://localhost:3001/produsers/${id}`);
-        fetchProducers();
+        await axios.delete(`http://localhost:3001/wholesalers/${id}`);
+        fetchWholesalers();
       } catch (error) {
         console.error('Error deleting producer:', error);
       }
@@ -34,12 +34,12 @@ import axios from 'axios';
       try {
         setError(null);
         console.log("Iniciando creación de productor...");
-        console.log("Datos del nuevo productor:", newProducer);
-    
+        console.log("Datos del nuevo productor:", newWholesaler);
+    /*
         // Primero, registra el productor en el contrato inteligente
-       /* console.log("Intentando registrar en la blockchain...");
+        console.log("Intentando registrar en la blockchain...");
         try {
-          await registerProducerOnBlockchain(newProducer.wallet_address);
+          await registerOrganizationOnBlockchain(newWholesaler.wallet_address);
           console.log("Productor registrado en la blockchain con éxito");
         } catch (blockchainError) {
           console.error('Error registrando en la blockchain:', blockchainError);
@@ -49,22 +49,22 @@ import axios from 'axios';
     
         // Luego, crea el productor en tu base de datos local
         console.log("Intentando crear en la base de datos local...");
-        const response = await axios.post('http://localhost:3001/produsers', newProducer);
+        const response = await axios.post('http://localhost:3001/wholesalers', newWholesaler);
         console.log("Productor creado en la base de datos:", response.data);
     
-        setNewProducer({ nombre: '', email: '', password: '', ubicacion: '', wallet_address: '' });
-        fetchProducers();
+        setNewWholesaler({ nombre: '', email: '', password: '', ubicacion: '', wallet_address: '' });
+        fetchWholesalers();
         setShowForm(false);
         console.log("Proceso de creación completado con éxito");
       } catch (error) {
-        console.error('Error general creando productor:', error);
-        setError('Error al crear el productor. Por favor, inténtalo de nuevo.');
+        console.error('Error general creando mayorista:', error);
+        setError('Error al crear el mayorista. Por favor, inténtalo de nuevo.');
       }
     };
     
     return (
       <div className="bg-gray-900 text-white min-h-screen p-4">
-        <h2 className="text-2xl font-semibold text-gray-200 mb-4">Gestión de Productores</h2>
+        <h2 className="text-2xl font-semibold text-gray-200 mb-4">Gestión de Mayoristas</h2>
         {error && (
         <div className="bg-red-500 text-white p-3 rounded mb-4">
           {error}
@@ -84,25 +84,25 @@ import axios from 'axios';
               </tr>
           </thead>
           <tbody>
-          {producers.map((producer) => (
-              <tr key={producer.productor_id} className="border-b border-gray-700">
-                <td className="px-4 py-2 font-bold">{producer.nombre}</td>
-                <td className="px-4 py-2">{producer.email}</td>
-                <td className="px-4 py-2">{producer.ubicacion}</td>
-                <td className="px-4 py-2">{producer.wallet_address}</td>
-                <td className="px-4 py-2">{new Date(producer.creado_en).toLocaleDateString()}</td>
+          {wholesalers.map((wholesalers) => (
+              <tr key={wholesalers.distribuidor_id} className="border-b border-gray-700">
+                <td className="px-4 py-2 font-bold">{wholesalers.nombre}</td>
+                <td className="px-4 py-2">{wholesalers.email}</td>
+                <td className="px-4 py-2">{wholesalers.ubicacion}</td>
+                <td className="px-4 py-2">{wholesalers.wallet_address}</td>
+                <td className="px-4 py-2">{new Date(wholesalers.creado_en).toLocaleDateString()}</td>
                 <td className="px-4 py-2 text-center">
                   <ul>
-                    {producer.products && producer.products.length > 0 ? (
-                      producer.products.map((product) => (
-                        <li key={product.product_id}>{product.product_name}</li>
+                    {/*wholesalers.products && wholesalers.products.length > 0 ? (
+                      wholesalers.products.map((product) => (
+                        <li key={wholesalers.distribuidor_id}>{wholesalers.product_name}</li>
                       ))
                     ) : (
-                      <li>No products</li>
-                    )}
+                      <li>No Distribuidores</li>
+                    )*/}
                   </ul>
                   <button
-                    onClick={() => handleDelete(producer.productor_id)}
+                    onClick={() => handleDelete(wholesalers.distribuidor_id)}
                     className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     Eliminar
@@ -123,40 +123,40 @@ import axios from 'axios';
 
         {showForm && (
           <div className="mb-4 mt-4">
-            <h3 className="text-xl font-semibold text-gray-200 mb-2">Crear Nuevo Productor</h3>
+            <h3 className="text-xl font-semibold text-gray-200 mb-2">Crear Nuevo Distribuidor</h3>
             <input
               type="text"
               placeholder="Nombre"
-              value={newProducer.nombre}
-              onChange={(e) => setNewProducer({ ...newProducer, nombre: e.target.value })}
+              value={newWholesaler.nombre}
+              onChange={(e) => setNewWholesaler({ ...newWholesaler, nombre: e.target.value })}
               className="mb-2 p-2 border rounded w-full bg-gray-700 text-white"
             />
             <input
               type="text"
               placeholder="Email"
-              value={newProducer.email}
-              onChange={(e) => setNewProducer({ ...newProducer, email: e.target.value })}
+              value={newWholesaler.email}
+              onChange={(e) => setNewWholesaler({ ...newWholesaler, email: e.target.value })}
               className="mb-2 p-2 border rounded w-full bg-gray-700 text-white"
             />
             <input
               type="text"
               placeholder="Password"
-              value={newProducer.password}
-              onChange={(e) => setNewProducer({ ...newProducer, password: e.target.value })}
+              value={newWholesaler.password}
+              onChange={(e) => setNewWholesaler({ ...newWholesaler, password: e.target.value })}
               className="mb-2 p-2 border rounded w-full bg-gray-700 text-white"
             />
             <input
               type="text"
               placeholder="Ubicación"
-              value={newProducer.ubicacion}
-              onChange={(e) => setNewProducer({ ...newProducer, ubicacion: e.target.value })}
+              value={newWholesaler.ubicacion}
+              onChange={(e) => setNewWholesaler({ ...newWholesaler, ubicacion: e.target.value })}
               className="mb-2 p-2 border rounded w-full bg-gray-700 text-white"
             />
             <input
               type="text"
               placeholder="Wallet Address"
-              value={newProducer.wallet_address}
-              onChange={(e) => setNewProducer({ ...newProducer, wallet_address: e.target.value })}
+              value={newWholesaler.wallet_address}
+              onChange={(e) => setNewWholesaler({ ...newWholesaler, wallet_address: e.target.value })}
               className="mb-2 p-2 border rounded w-full bg-gray-700 text-white"
             />
             <button
@@ -170,4 +170,4 @@ import axios from 'axios';
       </div>
     );
   };
-export default ProductorList;
+export default MayoristaList;

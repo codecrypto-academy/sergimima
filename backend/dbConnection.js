@@ -1,6 +1,5 @@
  import mysql from 'mysql2';
-import cors from 'cors';
-import bodyParser from 'body-parser';
+
 
 
 // Configurar conexión a la base de datos

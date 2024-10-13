@@ -126,3 +126,27 @@ INSERT INTO Admins (nombre, email, contraseña) VALUES ('sergi', 'sergimima@gmai
 ## License
 
 [Specify the license under which your project is released]
+
+
+
+
+***
+Prompt:
+
+Estoy haciendo un proyecto, donde hay 5 actores de los cuales uno es Admin, el cual puede crear los otros 4 actores.
+
+El proyecto es un ejemplo de tracking para un prodcuto, donde hay el productor, el almacen, el distribuidor y el minorista.
+
+El proyecto estará en blockchain, donde basicamente, cada evento, de crear el producto, enviar a almacen, enviar a distribuidor, enviar a minorista, se guarde en blockchain.
+
+Me recomendaste que fuera todo en un smartcontract, y que se guarden los eventos en este smart contract.
+
+En principio, cuando creo un producto, se genera una etiqueta con el UUID()
+
+
+Descripción general del proyecto TrackingChain
+Estructura de los contratos (TrackingChain y OrganizationRegistry)
+Tipos de organizaciones involucradas
+Herramientas de desarrollo (Hardhat, Ganache)
+Enfoque de desarrollo (iterativo y paralelo)
+Consideraciones sobre wallets y permisos

@@ -11,6 +11,7 @@ const Productor = ({ producerId }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [products, setProducts] = useState([]);
     const [newProduct, setNewProduct] = useState({ nombre: '', description: '', quantity: '' });
+    console.log(producerId);
 
     useEffect(() => {
         fetchProducts();
@@ -40,7 +41,6 @@ const Productor = ({ producerId }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            console.log(producerId);
             await axios.post('http://localhost:3001/productorCreate', {
                 ...newProduct,
                 productor_id: producerId,

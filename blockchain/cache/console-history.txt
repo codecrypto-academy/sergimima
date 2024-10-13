@@ -1,0 +1,4 @@
+console.log("Admin address:", admin);
+const admin = await contract.admin();
+const contract = await OrganizationRegistry.attach("DIRECCIÓN_DE// Ahora puedes interactuar con el contrato, por ejemplo:
+const OrganizationRegistry = await ethers.getContractFactory("OrganizationRegistry");

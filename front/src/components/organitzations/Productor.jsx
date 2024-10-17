@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Header from '../Header';
 import QRCode from 'qrcode';
 import WarehouseModal from './productorComponents/warehouseModal';
+import TransferHistory from './productorComponents/TransferHistory';
+
 
 const Productor = ({ producerId }) => {
     const [warehouses, setWarehouses] = useState([]);
@@ -11,18 +12,39 @@ const Productor = ({ producerId }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [products, setProducts] = useState([]);
     const [newProduct, setNewProduct] = useState({ nombre: '', description: '', quantity: '' });
-    console.log(producerId);
+    const [transfers, setTransfers] = useState([]);
+    const [showTransferHistory, setShowTransferHistory] = useState(null);
 
     useEffect(() => {
         fetchProducts();
+    }, []);
+
+    useEffect(() => {
+        fetchWarehouses();
     }, []);
 
     const fetchProducts = async () => {
         try {
             const response = await axios.get(`http://localhost:3001/products?productor_id=${producerId}`);
             setProducts(response.data);
+            response.data.forEach(product => {
+                fetchTransfers(product.producto_id);
+            });
+
         } catch (error) {
             console.error('Error fetching products:', error);
+        }
+    };
+
+    const fetchTransfers = async (product_id) => {
+        try {
+            const response = await axios.get(`http://localhost:3001/transfers?product_id=${product_id}`);
+            setTransfers(prevTransfers => ({
+                ...prevTransfers,
+                [product_id]: response.data
+            }));
+        } catch (error) {
+            console.error('Error fetching transfers:', error);
         }
     };
 
@@ -65,17 +87,23 @@ const Productor = ({ producerId }) => {
     };
 
     const handleSend = (product) => {
-        setSelectedProduct(product);
-        fetchWarehouses();
-        setIsModalOpen(true);
+        if (product.quantity > 0) {
+            setSelectedProduct(product);
+            fetchWarehouses();
+            setIsModalOpen(true);
+        } else {
+            alert("Oops! This product is out of stock. Please add inventory before sending.");
+            // For a more advanced solution, you could use a custom modal or toast notification here
+        }
     };
-    const sendProduct = async (warehouseId, quantity) => {
-        console.log('Parámetros enviados:', { warehouseId, quantity, productId: selectedProduct });
 
+    const sendProduct = async (almacen_id, quantity,) => {
+        console.log('Parámetros enviados:', { productor_id: producerId, producto_id: selectedProduct.producto_id, almacen_id, quantity });        //console.log(producto_id, productor_id, warehouseId, quantity);
         try {
             await axios.post('http://localhost:3001/productSent', {
-                producto_id: selectedProduct,
-                almacen_id: warehouseId,
+                producto_id: selectedProduct.producto_id,
+                productor_id: producerId,
+                almacen_id: almacen_id,
                 quantity: quantity
             });
             fetchProducts();
@@ -85,10 +113,12 @@ const Productor = ({ producerId }) => {
         }
     };
 
-    const handleDelete = async (productId) => {
+    const handleDelete = async (producto_id) => {
         try {
+
             await axios.post('http://localhost:3001/productDeleted', {
-                producto_id: productId,
+
+                producto_id: producto_id,
             });
             fetchProducts();
         } catch (error) {
@@ -96,6 +126,9 @@ const Productor = ({ producerId }) => {
         }
     };
 
+    const handleViewTransferHistory = (productId) => {
+        setShowTransferHistory(productId);
+    };
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -147,29 +180,25 @@ const Productor = ({ producerId }) => {
                 <table className="w-full table-auto">
                     <thead>
                         <tr className="bg-gray-200">
-                            <th className="px-4 py-2 text-left">Name</th>
-                            <th className="px-4 py-2 text-left">Description</th>
-                            <th className="px-4 py-2 text-left">Quantity</th>
-                            <th className="px-4 py-2 text-left">Created</th>
-                            <th className="px-4 py-2 text-left">Sent</th>
-                            <th className="px-4 py-2 text-left">State</th>
-                            <th className="px-4 py-2 text-left">Actions</th>
+                            <th className="px-4 py-2 text-left">Nombre</th>
+                            <th className="px-4 py-2 text-left">Descripcion</th>
+                            <th className="px-4 py-2 text-left">Cantidad</th>
+                            <th className="px-4 py-2 text-left">Creado</th>
+                            <th className="px-4 py-2 text-left">Estado</th>
+                            <th className="px-4 py-2 text-left">Opciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {products.map((product, index) => (
-                            <tr key={`product.product_id-${index}`} className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                            <tr key={`product.product_id-${index}`} className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} ${product.quantity === 0 ? 'bg-red-100' : ''}`}>
                                 <td className="px-4 py-2">{product.nombre}</td>
                                 <td className="px-4 py-2">{product.descripcion}</td>
-                                <td className="px-4 py-2">{product.quantity}</td>
                                 <td className="px-4 py-2">
-                                    {new Date(product.fecha_creacion).toLocaleDateString()}
+                                    {product.quantity}
+                                    {product.quantity === 0 && <span className="ml-2 text-red-500 text-xs font-bold">Sin stock</span>}
                                 </td>
                                 <td className="px-4 py-2">
-                                    {!product.fecha_distribucion
-                                        ? 'No enviado'
-                                        : new Date(product.fecha_distribucion).toLocaleDateString()
-                                    }
+                                    {new Date(product.fecha_creacion).toLocaleDateString()}
                                 </td>
                                 <td className="px-4 py-2">{product.state}</td>
                                 <td className="px-4 py-2">
@@ -179,7 +208,11 @@ const Productor = ({ producerId }) => {
                                                 <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                                             </svg>
                                         </button>
-                                        <button key={`send-${product.product_id}`} onClick={() => handleSend(product.producto_id)} className="text-green-500 hover:text-green-700">
+                                        <button
+                                            onClick={() => handleSend(product)}
+                                            className={`text-green-500 hover:text-green-700 ${product.quantity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            disabled={product.quantity === 0}
+                                        >
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                 <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                                             </svg>
@@ -189,23 +222,32 @@ const Productor = ({ producerId }) => {
                                                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                             </svg>
                                         </button>
+                                        <button onClick={() => handleViewTransferHistory(product.producto_id)} className="text-purple-500 hover:text-purple-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                                                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                                            </svg>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
-                </table>
-            </div>
+                </table>            </div>
             <WarehouseModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 warehouses={warehouses}
                 onSend={sendProduct}
             />
+            {showTransferHistory && (
+                <TransferHistory
+                    transfers={transfers[showTransferHistory]}
+                    onClose={() => setShowTransferHistory(null)}
+                />
+            )}
         </div>
     );
 };
 
 export default Productor;
-
-

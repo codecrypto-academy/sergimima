@@ -12,6 +12,8 @@ app.use(bodyParser.json());
 
 // Aquí puedes agregar tus rutas y middleware
 
+
+
 // Login
 app.post('/login', (req, res) => {
     const { role, email, password, } = req.body;
@@ -36,7 +38,24 @@ app.post('/login', (req, res) => {
 });
 
 //---------------
-// ADMIN
+//#region TRANSFERS
+//---------------
+
+app.get('/transfers', (req, res) => {
+    const { product_id } = req.query;
+    const query = `SELECT * FROM Transfers WHERE product_id = ?`;
+    connection.query(query, [product_id], (error, results) => {
+        if (error) {
+            return res.status(500).json({ error });
+        }
+        res.json(results);
+    });
+});
+
+//#endregion
+
+//---------------
+//#region ADMIN
 //---------------
 
 // Admin - Usuarios
@@ -202,9 +221,10 @@ app.delete('/sellers/:id', (req, res) => {
 });
 
 // Admin - Productos
+//#endregion
 
 //---------------
-// PRODUCTORES
+//#region PRODUCTORES
 //---------------
 
 // Productores - Productor
@@ -223,9 +243,8 @@ app.get('/products', (req, res) => {
 app.post('/productorCreate', (req, res) => {
     const uniqueId = uuidv4();
     const { nombre, description, productor_id, quantity } = req.body;
-    const query = 'INSERT INTO Productos (nombre, descripcion, productor_id, distribuidor_id, almacen_id, minorista_id, fecha_creacion, fecha_distribucion, quantity, state, uuid) VALUES (?, ?, ?, NULL, NULL, NULL, NOW(), NULL, ?, "Creado", ?)';
+    const query = 'INSERT INTO Productos (nombre, descripcion, productor_id, distribuidor_id, almacen_id, minorista_id, fecha_creacion, quantity, state, uuid) VALUES (?, ?, ?, NULL, NULL, NULL, NOW(),  ?, "Creado", ?)';
     const values = [nombre, description, productor_id, quantity, uniqueId];
-    console.log(description);
     connection.query(query, [nombre, description, productor_id, quantity, uniqueId], (error, results) => {
         if (error) {
             const formattedQuery = mysql.format(query, values);
@@ -237,19 +256,42 @@ app.post('/productorCreate', (req, res) => {
 });
 
 app.post('/productSent', (req, res) => {
-    const { producto_id, almacen_id, quantity } = req.body;
-    const query = 'UPDATE Productos SET almacen_id = ?, fecha_distribucion = NOW(), quantity = quantity - ? , state = "Enviado"WHERE producto_id = ? ';
-    //console.log(query(query, [almacen_id, quantity, producto_id]));
-    connection.query(query, [almacen_id, quantity, producto_id], (error, results) => {
-        if (error) {
-            console.log(query, [almacen_id,  quantity, producto_id]);
-            return res.status(500).json({ error });
-        }
-        res.json(results);
+    const { producto_id, productor_id, almacen_id, quantity } = req.body;
+    const updateProductQuery = 'UPDATE Productos SET almacen_id = ?, quantity = quantity - ? , state = "Enviado"WHERE producto_id = ? ';
+    const insertTransferQuery = 'INSERT INTO Transfers (product_id, producer_id, sent_to_almacen_ID, quantity_sent_almacen, date_sent_almacen, status) VALUES (?, ?, ?, ?, NOW(), "Enviado a almacen")';
+
+    connection.beginTransaction((err) => {
+        if (err) { return res.status(500).json({ error: err }); }
+
+        connection.query(updateProductQuery, [almacen_id, quantity, producto_id], (error, results) => {
+            if (error) {
+                return connection.rollback(() => {
+                    res.status(500).json({ error });
+                });
+            }
+
+            connection.query(insertTransferQuery, [producto_id, productor_id, almacen_id, quantity], (error, transferResults) => {
+                if (error) {
+                    return connection.rollback(() => {
+                        res.status(500).json({ error });
+                    });
+                }
+
+                connection.commit((err) => {
+                    if (err) {
+                        return connection.rollback(() => {
+                            res.status(500).json({ error: err });
+                        });
+                    }
+                    res.json({ message: "Product sent and transfer recorded successfully", results, transferResults });
+                });
+            });
+        });
     });
 });
 app.post('/productDeleted', (req, res) => {
     const { producto_id } = req.body;
+    console.log(producto_id);
     const query = 'DELETE FROM Productos WHERE producto_id = ?';
     connection.query(query, [producto_id], (error, results) => {
         if (error) {
@@ -263,9 +305,47 @@ app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
 
+//#endregion
+
 //---------------
-// ALMACEN
-//---------------
+//#region ALMACEN
+//---------------4
+
+app.get('/productsPendingReveiveAlmacen', (req, res) => {
+    const { almacen_id } = req.query;
+    const query = `
+        SELECT p.* 
+        FROM Productos p
+        JOIN Transfers t ON p.producto_id = t.product_id
+        WHERE p.almacen_id = ? 
+        AND t.status = 'Enviado a almacen'
+    `;
+    connection.query(query, [almacen_id], (error, results) => {
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+        res.json(results);
+    });
+});
+
+app.get('/productsAlmacen', (req, res) => {
+    const { almacen_id } = req.query;
+
+    const query = `
+        SELECT p.* 
+        FROM Productos p
+        JOIN Transfers t ON p.producto_id = t.product_id
+        WHERE p.almacen_id = ? 
+        AND t.status = 'Recivido por Almacen'
+    `;
+
+    connection.query(query, [almacen_id], (error, results) => {
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+        res.json(results);
+    });
+});
 
 app.get('/productsAlmacen', (req, res) => {
     const { almacen_id } = req.query;
@@ -277,3 +357,48 @@ app.get('/productsAlmacen', (req, res) => {
         res.json(results);
     });
 });
+
+app.post('/receiveProduct', (req, res) => {
+    const { productId, } = req.body;
+    const query = 'UPDATE Productos SET state = "Recivido por Almacen" WHERE producto_id = ? ';
+    connection.query(query, [productId], (error, results) => {
+        if (error) {
+            //console.log(query, [producto_id]);
+            return res.status(500).json({ error });
+        }
+        console.log(query, [productId]);
+        res.json(results);
+    });
+});
+
+app.post('/sentProdcutToMayorista', (req, res) => {
+    const { productId, } = req.body;
+    const query = 'UPDATE Productos SET almacen_id = ?, state = "Enviado a Mayorista" WHERE producto_id = ? ';
+    connection.query(query, [productId], (error, results) => {
+        if (error) {
+            //console.log(query, [producto_id]);
+            return res.status(500).json({ error });
+        }
+        console.log(query, [productId]);
+        res.json(results);
+    });
+});
+//#endregion
+
+//---------------
+//#region MAYORISTA
+//---------------
+
+app.get('/distribuidor', (req, res) => {
+
+    const query = 'SELECT * FROM Distribuidores';
+    connection.query(query, (error, results) => {
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+        res.json(results);
+    });
+});
+
+
+//#endregion

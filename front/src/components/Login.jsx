@@ -29,10 +29,12 @@ const Login = () => {
             break;
           case 'Productores':
             userId = response.data.user.productor_id;
+            console.log(userId);
             navigate('/Productores');
             break;
           case 'Almacenes':
             userId = response.data.user.almacen_id;
+            console.log(userId);
             navigate('/Almacenes');
             break;
           case 'Distribuidores':
@@ -57,7 +59,7 @@ const Login = () => {
             navigate('/Productores');
             break;
           case 'Almacenes':
-            navigate('/almacen');
+            navigate('/Almacenes');
             break;
           case 'Distribuidores':
             navigate('/Distribuidores');

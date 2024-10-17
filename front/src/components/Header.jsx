@@ -1,8 +1,7 @@
 // src/components/Header.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ThemeToggle from '../assets/ThemeToggle';
-import { ethers } from 'ethers';
+
 
 const ethereum = window.ethereum;
 

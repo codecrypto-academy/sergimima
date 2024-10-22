@@ -17,9 +17,6 @@ const Productor = ({ producerId }) => {
 
     useEffect(() => {
         fetchProducts();
-    }, []);
-
-    useEffect(() => {
         fetchWarehouses();
     }, []);
 
@@ -233,7 +230,8 @@ const Productor = ({ producerId }) => {
                             </tr>
                         ))}
                     </tbody>
-                </table>            </div>
+                </table>
+            </div>
             <WarehouseModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

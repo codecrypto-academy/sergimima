@@ -311,10 +311,10 @@ app.listen(port, () => {
 //#region ALMACEN
 //---------------4
 
-app.get('/productsPendingReveiveAlmacen', (req, res) => {
+app.get('/productsPendingReceveiveAlmacen', (req, res) => {
     const { almacen_id } = req.query;
     const query = `
-        SELECT p.* 
+        SELECT p.*, t.*
         FROM Productos p
         JOIN Transfers t ON p.producto_id = t.product_id
         WHERE p.almacen_id = ? 
@@ -332,11 +332,12 @@ app.get('/productsAlmacen', (req, res) => {
     const { almacen_id } = req.query;
 
     const query = `
-        SELECT p.* 
+        SELECT p.*, t.* 
         FROM Productos p
         JOIN Transfers t ON p.producto_id = t.product_id
         WHERE p.almacen_id = ? 
-        AND t.status = 'Recivido por Almacen'
+        AND t.status = 'Recivido a almacen'
+        AND t.quantity_received_almacen > 0
     `;
 
     connection.query(query, [almacen_id], (error, results) => {
@@ -347,40 +348,75 @@ app.get('/productsAlmacen', (req, res) => {
     });
 });
 
-app.get('/productsAlmacen', (req, res) => {
-    const { almacen_id } = req.query;
-    const query = 'SELECT * FROM Productos WHERE almacen_id = ?';
-    connection.query(query, [almacen_id], (error, results) => {
-        if (error) {
-            return res.status(500).json({ error: error.message });
-        }
-        res.json(results);
-    });
-});
 
 app.post('/receiveProduct', (req, res) => {
-    const { productId, } = req.body;
-    const query = 'UPDATE Productos SET state = "Recivido por Almacen" WHERE producto_id = ? ';
-    connection.query(query, [productId], (error, results) => {
-        if (error) {
-            //console.log(query, [producto_id]);
-            return res.status(500).json({ error });
+    const { almacenId, quantity, productId, transferId } = req.body;
+    const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    // Start a transaction to ensure both updates are successful
+    connection.beginTransaction((err) => {
+        if (err) {
+            return res.status(500).json({ error: err });
         }
-        console.log(query, [productId]);
-        res.json(results);
+        // Update Productos table
+        const productQuery = 'UPDATE Productos SET state = "Recivido por Almacen" WHERE producto_id = ?';
+        connection.query(productQuery, [productId], (error, productResults) => {
+            if (error) {
+                return connection.rollback(() => {
+                    res.status(500).json({ error });
+                });
+            }
+            // Update Transfers table
+            const transferQuery = 'UPDATE Transfers SET almacen_user_received = ?, quantity_received_almacen = ?, status = "Recivido a almacen", date_received_almacen = ? WHERE transfer_id = ?';
+            connection.query(transferQuery, [almacenId, quantity, currentDate, transferId], (transferError, transferResults) => {
+                if (transferError) {
+                    return connection.rollback(() => {
+                        res.status(500).json({ error: transferError });
+                    });
+                }
+                // Commit the transaction
+                connection.commit((commitError) => {
+                    if (commitError) {
+                        return connection.rollback(() => {
+                            res.status(500).json({ error: commitError });
+                        });
+                    }
+                    res.json({ message: "Product received successfully", productResults, transferResults });
+                });
+            });
+        });
     });
 });
 
 app.post('/sentProdcutToMayorista', (req, res) => {
-    const { productId, } = req.body;
-    const query = 'UPDATE Productos SET almacen_id = ?, state = "Enviado a Mayorista" WHERE producto_id = ? ';
-    connection.query(query, [productId], (error, results) => {
+    const { transfer_id, product_id, almacenId, quantity, distribuidor_id } = req.body;
+    const insertTransferQuery = 'INSERT INTO Transfers (product_id, almacen_user_sent, quantity_sent_provider, date_sent_provider, sent_to_provider_ID, status) VALUES (?, ?, ?, NOW(), ?,"Enviado a Mayorista")';
+    const updateTransfer = 'UPDATE Transfers SET quantity_received_almacen = quantity_received_almacen - ?, status = "Recivido a almacen" WHERE transfer_id = ?';
+
+
+    connection.query(insertTransferQuery, [product_id, almacenId, quantity, distribuidor_id], (error, results) => {
+        // console.log("Datos", product_id, almacenId, quantity, distribuidor_id);
         if (error) {
-            //console.log(query, [producto_id]);
-            return res.status(500).json({ error });
+            return connection.rollback(() => {
+                res.status(500).json({ error });
+                console.log("Error", error);
+            });
         }
-        console.log(query, [productId]);
-        res.json(results);
+        connection.query(updateTransfer, [quantity, transfer_id], (error, results) => {
+            console.log(connection.format(updateTransfer, [quantity, transfer_id]));
+            if (error) {
+                return connection.rollback(() => {
+                    res.status(500).json({ error });
+                });
+            }
+            connection.commit((err) => {
+                if (err) {
+                    return connection.rollback(() => {
+                        res.status(500).json({ error: err });
+                    });
+                }
+                res.json({ message: "Product sent and transfer recorded successfully", results });
+            });
+        });
     });
 });
 //#endregion

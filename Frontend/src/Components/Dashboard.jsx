@@ -4,17 +4,13 @@ import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../../../Backend/Contract.js'
 import { useWallet } from '../Context/WalletContext.jsx'
 import { useNavigate } from 'react-router-dom'
 
-
-
-
-
-
 const Dashboard = () => {
     const navigate = useNavigate()
     const { isConnected, userInfo, currentAddress } = useWallet()
     const [clients, setClients] = useState([])
     const [companies, setCompanies] = useState([])
     const [userAddress, setUserAddress] = useState('')
+    const [purchases, setPurchases] = useState([])
     const [productForm, setProductForm] = useState({
         name: '',
         price: '',
@@ -28,28 +24,80 @@ const Dashboard = () => {
         }
     }, [isConnected])
 
-    const fetchUsers = async () => {
-        if (typeof window.ethereum !== 'undefined') {
-            const web3 = new Web3(window.ethereum)
-            const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS)
+    const loadPurchases = async () => {
+        console.log('Loading purchases for address:', userAddress)
+        const web3 = new Web3(window.ethereum)
+        const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS)
 
+        const events = await contract.getPastEvents('FacturaCreada', {
+            filter: { addressCliente: userAddress },
+            fromBlock: 0,
+            toBlock: 'latest'
+        })
+        console.log('Found events:', events)
+
+        const purchaseDetails = await Promise.all(events.map(async (event) => {
+            const factura = await contract.methods.facturas(event.returnValues.numeroFactura).call()
+            return {
+                numeroFactura: event.returnValues.numeroFactura,
+                addressEmpresa: factura.addressEmpresa,
+                fechaFactura: factura.fechaFactura,
+                importeTotal: factura.importeTotal,
+                transactionHash: event.transactionHash
+            }
+        }))
+        console.log('Processed purchase details:', purchaseDetails)
+        setPurchases(purchaseDetails)
+    }
+
+    const handleCryptoPayment = async () => {
+        try {
+            console.log('Starting crypto payment process...')
             const accounts = await window.ethereum.request({
                 method: 'eth_requestAccounts'
             })
-            const currentAddress = accounts[0]
-            setUserAddress(currentAddress)
+            const userAddress = accounts[0]
+            const web3 = new Web3(window.ethereum)
 
-            const client = await contract.methods.clientes(currentAddress).call()
-            const empresa = await contract.methods.empresas(currentAddress).call()
+            // First: Execute the payment transfer
+            const gasEstimate = await web3.eth.estimateGas({
+                from: userAddress,
+                to: cartItems[0].empresa,
+                value: web3.utils.toWei(total.toString(), 'ether')
+            })
 
-            if (client.addressCliente !== '0x0000000000000000000000000000000000000000') {
-                setClients([client])
+            const tx = await web3.eth.sendTransaction({
+                from: userAddress,
+                to: cartItems[0].empresa,
+                value: web3.utils.toWei(total.toString(), 'ether'),
+                gas: gasEstimate,
+                gasPrice: await web3.eth.getGasPrice()
+            })
+
+            // Second: Create the invoice record from customer's address
+            const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS)
+            const invoiceTx = await contract.methods.crearFactura(
+                cartItems[0].empresa,  // company address as parameter
+                web3.utils.toWei(total.toString(), 'ether')
+            ).send({
+                from: userAddress,  // customer creates the invoice
+                gas: 200000  // Set a specific gas limit
+            })
+
+            console.log('Payment transaction:', tx.transactionHash)
+            console.log('Invoice transaction:', invoiceTx.transactionHash)
+
+            if (tx.status && invoiceTx.status) {
+                clearCart()
+                navigate('/payment/success')
             }
-            if (empresa.addressEmpresa !== '0x0000000000000000000000000000000000000000') {
-                setCompanies([empresa])
-            }
+        } catch (error) {
+            console.error('Transaction failed:', error)
+            navigate('/payment/error')
         }
     }
+
+
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0]
@@ -102,8 +150,6 @@ const Dashboard = () => {
                 const accounts = await web3.eth.getAccounts()
                 const amoyPrice = web3.utils.toWei('0.001', 'ether')
 
-
-
                 console.log('Transaction details:', {
                     from: accounts[0],
                     price: amoyPrice.toString(),
@@ -115,7 +161,6 @@ const Dashboard = () => {
                     amoyPrice.toString(),
                     productForm.image
                 ).estimateGas({ from: accounts[0] })
-
 
                 await contract.methods.crearProducto(
                     amoyPrice,
@@ -140,17 +185,58 @@ const Dashboard = () => {
             <p className="text-white mb-4">Connected Address: {userAddress}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {clients.length > 0 && (
-                    <div className="bg-gray-800 p-6 rounded-lg">
-                        <h2 className="text-xl font-semibold text-white mb-4">Registered Clients</h2>
-                        <div className="space-y-4">
-                            {clients.map((client, index) => (
-                                <div key={index} className="bg-gray-700 p-4 rounded">
-                                    <p className="text-white">Client Address: {client.addressCliente}</p>
-                                    <p className="text-white">Total Purchases: {client.ComprasTotales}</p>
-                                </div>
-                            ))}
+                    <>
+                        <div className="bg-gray-800 p-6 rounded-lg">
+                            <h2 className="text-xl font-semibold text-white mb-4">Registered Clients</h2>
+                            <div className="space-y-4">
+                                {clients.map((client, index) => (
+                                    <div key={index} className="bg-gray-700 p-4 rounded">
+                                        <p className="text-white">Client Address: {client.addressCliente}</p>
+                                        <p className="text-white">Total Purchases: {client.ComprasTotales}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+
+                        <div className="bg-gray-800 p-6 rounded-lg">
+                            <h2 className="text-xl font-semibold text-white mb-4">Purchase History</h2>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full">
+                                    <thead>
+                                        <tr>
+                                            <th className="text-left text-white px-4 py-2">Invoice #</th>
+                                            <th className="text-left text-white px-4 py-2">Company</th>
+                                            <th className="text-left text-white px-4 py-2">Date</th>
+                                            <th className="text-left text-white px-4 py-2">Amount</th>
+                                            <th className="text-left text-white px-4 py-2">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {purchases.map((purchase) => (
+                                            <tr key={purchase.numeroFactura} className="border-t border-gray-700">
+                                                <td className="text-white px-4 py-2">{purchase.numeroFactura}</td>
+                                                <td className="text-white px-4 py-2">{purchase.addressEmpresa}</td>
+                                                <td className="text-white px-4 py-2">
+                                                    {new Date(purchase.fechaFactura * 1000).toLocaleDateString()}
+                                                </td>
+                                                <td className="text-white px-4 py-2">
+                                                    {Web3.utils.fromWei(purchase.importeTotal.toString(), 'ether')} POL
+                                                </td>
+                                                <td className="text-white px-4 py-2">
+                                                    <button
+                                                        className="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm"
+                                                        onClick={() => handleExportPDF(purchase)}
+                                                    >
+                                                        Export PDF
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </>
                 )}
 
                 {companies.length > 0 && (

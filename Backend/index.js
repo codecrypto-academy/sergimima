@@ -2,7 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import bodyParser from 'body-parser'
 import Web3 from 'web3'
+import router from './payment.js'
 import paymentRoutes from './payment.js'
+
 
 // Web3 and Network Configuration
 const AMOY_RPC_URL = 'https://rpc-amoy.polygon.technology'
@@ -99,7 +101,7 @@ app.post('/api/register', async (req, res) => {
     }
 })
 
-app.use('/payment', paymentRoutes)
+app.use('/payment', router, paymentRoutes)
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`)

@@ -5,10 +5,7 @@ import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../../../Backend/Contract.js'
 import RegisterForm from './RegisterForm'
 import { Link } from 'react-router-dom'
 import { useWallet } from '../Context/WalletContext.jsx'
-import { Cog6ToothIcon } from '@heroicons/react/24/solid'
-import { ShoppingCartIcon } from '@heroicons/react/24/solid'
-import { WalletIcon } from '@heroicons/react/24/solid'
-import { PowerIcon } from '@heroicons/react/24/solid'
+import { Cog6ToothIcon, ShoppingCartIcon, WalletIcon, PowerIcon } from '@heroicons/react/24/solid'
 import ShoppingCart from './ShoppingCart'
 import { useCart } from '../Context/CartContext'
 import { useTheme } from '../Context/ThemeContext'
@@ -20,36 +17,6 @@ const Header = () => {
     const [isCartOpen, setIsCartOpen] = useState(false)
     const { cartItems } = useCart()
     const cartRef = useRef()
-    useEffect(() => {
-        if (window.ethereum) {
-            window.ethereum.on('accountsChanged', (accounts) => {
-                if (accounts.length > 0) {
-                    connectWallet()
-                } else {
-                    disconnectWallet()
-                }
-            })
-        }
-        return () => {
-            if (window.ethereum) {
-                window.ethereum.removeListener('accountsChanged', connectWallet)
-            }
-        }
-    }, [])
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (cartRef.current &&
-                !cartRef.current.contains(event.target) &&
-                !event.target.closest('button')) {
-                setIsCartOpen(false)
-            }
-        }
-
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [])
-
 
     const connectWallet = async () => {
         if (typeof window.ethereum !== 'undefined') {
@@ -71,7 +38,6 @@ const Header = () => {
                         type: 'Cliente',
                         compras: cliente.ComprasTotales
                     })
-
                 } else if (empresa.addressEmpresa !== '0x0000000000000000000000000000000000000000') {
                     setUserInfo({
                         address: accounts[0],
@@ -82,11 +48,46 @@ const Header = () => {
             }
         }
     }
+
     const disconnectWallet = () => {
         setUserInfo(null)
         setIsConnected(false)
         setCurrentAddress(null)
     }
+
+    const handleAccountsChanged = (accounts) => {
+        if (accounts.length > 0) {
+            connectWallet()
+        } else {
+            disconnectWallet()
+        }
+    }
+
+    useEffect(() => {
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', handleAccountsChanged)
+        }
+
+        return () => {
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged)
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (cartRef.current &&
+                !cartRef.current.contains(event.target) &&
+                !event.target.closest('button')) {
+                setIsCartOpen(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
     return (
         <>
             <div className="relative">

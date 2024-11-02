@@ -10,7 +10,8 @@ import { CartProvider } from './Context/CartContext'
 import { ThemeProvider } from './Context/ThemeContext'
 import ParticleBackground from './Components/ParticleBackground'
 import Checkout from './Components/Checkout'
-
+import PaymentSuccess from './Components/PaymentSuccess'
+import PaymentError from './Components/PaymentError'
 
 function App() {
   return (
@@ -27,9 +28,9 @@ function App() {
                   <Routes>
                     <Route path="/" element={<ProductGrid />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/payment/success" element={<PaymentSuccess />} />
+                    <Route path="/payment/error" element={<PaymentError />} />
                     <Route path="/checkout" element={<Checkout />} />
-
-
                     <Route
                       path="/dashboard"
                       element={

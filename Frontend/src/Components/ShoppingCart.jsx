@@ -5,12 +5,14 @@ import { Web3 } from 'web3'
 import { WalletIcon, CreditCardIcon } from '@heroicons/react/24/solid'
 import { useTheme } from '../Context/ThemeContext'
 import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 
 const ShoppingCart = () => {
     const theme = useTheme()
     const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart()
     const { isConnected, userInfo } = useWallet()
+    const navigate = useNavigate()
 
     const total = cartItems.reduce((sum, item) => sum + (parseFloat(item.precio) * item.quantity), 0)
 
@@ -25,23 +27,42 @@ const ShoppingCart = () => {
         const accounts = await web3.eth.getAccounts()
 
         try {
-            // Implementation coming next
+            const totalInWei = web3.utils.toWei(total.toString(), 'ether')
+            await contract.methods.processPayment(totalInWei).send({
+                from: accounts[0],
+                value: totalInWei
+            })
+            clearCart()
+            alert('Payment successful!')
         } catch (error) {
             console.error('Checkout error:', error)
+            alert('Payment failed. Please try again.')
         }
     }
 
     const handleRedsysCheckout = async () => {
-        // Implementation coming next
-    }
+        try {
+            const response = await fetch('/api/create-redsys-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: total,
+                    items: cartItems,
+                    userId: userInfo.id
+                })
+            })
 
-    const handleQuantityChange = (itemId, newQuantity) => {
-        if (newQuantity === 0) {
-            removeFromCart(itemId);
-        } else {
-            updateQuantity(itemId, newQuantity);
+            const data = await response.json()
+            if (data.redirectUrl) {
+                window.location.href = data.redirectUrl
+            }
+        } catch (error) {
+            console.error('Redsys checkout error:', error)
+            alert('Payment initialization failed. Please try again.')
         }
-    };
+    }
 
     return (
         <div className="h-full flex flex-col">
@@ -83,20 +104,20 @@ const ShoppingCart = () => {
                     </div>
                 ))}
             </div>
-            <div className="p-6 border-t border-gray-700">
+            <div className="p-6 border-t border-gray-700 relative">
                 <div className="flex justify-between items-center mb-4">
                     <span className="text-white text-lg">Total:</span>
                     <span className="text-white text-lg">{total.toFixed(2)} POL</span>
                 </div>
-                <Link
-                    to="/checkout"
+                <button
+                    onClick={() => navigate('/checkout')}
                     className={`${theme.button.primary} w-full flex justify-center items-center`}
                 >
                     <span className={theme.button.primaryGradient} />
                     <span className={theme.button.content}>
                         Proceed to Checkout
                     </span>
-                </Link>
+                </button>
             </div>
         </div>
     )

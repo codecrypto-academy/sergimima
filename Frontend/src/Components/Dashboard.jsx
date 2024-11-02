@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom'
 
 
 
+
+
+
 const Dashboard = () => {
     const navigate = useNavigate()
     const { isConnected, userInfo, currentAddress } = useWallet()
@@ -17,9 +20,6 @@ const Dashboard = () => {
         price: '',
         image: null
     })
-
-    // Add this field in the form, right at the top:
-
 
     useEffect(() => {
         fetchUsers()
@@ -54,20 +54,43 @@ const Dashboard = () => {
     const handleImageUpload = async (e) => {
         const file = e.target.files[0]
         if (file) {
-            // Here we'll add the IPFS upload logic
-            const formData = new FormData()
-            formData.append('file', file)
+            try {
+                const formData = new FormData()
+                formData.append('file', file)
 
-            // Using Pinata, Infura, or your preferred IPFS service
-            const response = await fetch('YOUR_IPFS_UPLOAD_ENDPOINT', {
-                method: 'POST',
-                body: formData
-            })
+                const response = await fetch('http://127.0.0.1:5001/api/v0/add', {
+                    method: 'POST',
+                    headers: {
+                        'Origin': 'http://localhost:5173'
+                    },
+                    body: formData
+                })
 
-            const data = await response.json()
-            const ipfsHash = data.IpfsHash
-            setProductForm({ ...productForm, ipfsHash })
+                const data = await response.json()
+                console.log('File uploaded to local node with hash:', data.Hash)
+                await checkPinStatus(data.Hash)
+                setProductForm({ ...productForm, image: data.Hash })
+                await fetch(`http://127.0.0.1:5001/api/v0/files/cp?arg=/ipfs/${data.Hash}&arg=/${file.name}`, {
+                    method: 'POST',
+                    headers: {
+                        'Origin': 'http://localhost:5173'
+                    }
+                })
+
+            } catch (error) {
+                console.error('Error uploading to IPFS:', error)
+            }
         }
+    }
+    const checkPinStatus = async (hash) => {
+        const response = await fetch(`http://127.0.0.1:5001/api/v0/pin/ls?arg=${hash}`, {
+            method: 'POST',
+            headers: {
+                'Origin': 'http://localhost:5173'
+            }
+        })
+        const data = await response.json()
+        console.log('Pin status:', data)
     }
 
     const handleAddProduct = async (e) => {
@@ -77,17 +100,39 @@ const Dashboard = () => {
             const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS)
             try {
                 const accounts = await web3.eth.getAccounts()
-                await contract.methods.addProduct(
-                    web3.utils.toWei(productForm.price, 'ether'),
-                    productForm.ipfsHash
-                ).send({ from: accounts[0] })
+                const amoyPrice = web3.utils.toWei('0.001', 'ether')
 
-                setProductForm({ price: '', image: null })
+
+
+                console.log('Transaction details:', {
+                    from: accounts[0],
+                    price: amoyPrice.toString(),
+                    hash: productForm.image,
+                    contract: CONTRACT_ADDRESS
+                })
+
+                const gas = await contract.methods.crearProducto(
+                    amoyPrice.toString(),
+                    productForm.image
+                ).estimateGas({ from: accounts[0] })
+
+
+                await contract.methods.crearProducto(
+                    amoyPrice,
+                    productForm.image
+                ).send({
+                    from: accounts[0],
+                    gas: gas,
+                    gasPrice: await web3.eth.getGasPrice()
+                })
+
+                setProductForm({ name: '', price: '', image: null })
             } catch (error) {
-                console.error('Error adding product:', error)
+                console.error('Detailed error:', error)
             }
         }
     }
+
 
     return (
         <div className="p-6">
@@ -131,10 +176,11 @@ const Dashboard = () => {
                                         type="text"
                                         value={productForm.name}
                                         onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                                        className="w-full p-2 border rounded"
+                                        className="w-full p-2 border rounded bg-gray-700 text-white placeholder-gray-400"
                                         placeholder="Enter product name"
                                         required
                                     />
+
                                 </div>
                                 <div>
                                     <label className="block text-white mb-2">Product Image</label>
@@ -153,7 +199,7 @@ const Dashboard = () => {
                                         step="0.01"
                                         value={productForm.price}
                                         onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                                        className="w-full p-2 border rounded"
+                                        className="w-full p-2 border rounded bg-gray-700 text-white"
                                         required
                                     />
                                 </div>

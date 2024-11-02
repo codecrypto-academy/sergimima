@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Modal from './RegisterModal'
 import { Web3 } from 'web3'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../../../Backend/Contract.js'
@@ -6,14 +6,20 @@ import RegisterForm from './RegisterForm'
 import { Link } from 'react-router-dom'
 import { useWallet } from '../Context/WalletContext.jsx'
 import { Cog6ToothIcon } from '@heroicons/react/24/solid'
-
-
+import { ShoppingCartIcon } from '@heroicons/react/24/solid'
+import { WalletIcon } from '@heroicons/react/24/solid'
+import { PowerIcon } from '@heroicons/react/24/solid'
+import ShoppingCart from './ShoppingCart'
+import { useCart } from '../Context/CartContext'
+import { useTheme } from '../Context/ThemeContext'
 
 const Header = () => {
+    const theme = useTheme()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const { isConnected, setIsConnected, userInfo, setUserInfo, currentAddress, setCurrentAddress } = useWallet()
-
-
+    const [isCartOpen, setIsCartOpen] = useState(false)
+    const { cartItems } = useCart()
+    const cartRef = useRef()
     useEffect(() => {
         if (window.ethereum) {
             window.ethereum.on('accountsChanged', (accounts) => {
@@ -30,6 +36,20 @@ const Header = () => {
             }
         }
     }, [])
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (cartRef.current &&
+                !cartRef.current.contains(event.target) &&
+                !event.target.closest('button')) {
+                setIsCartOpen(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
 
     const connectWallet = async () => {
         if (typeof window.ethereum !== 'undefined') {
@@ -51,6 +71,7 @@ const Header = () => {
                         type: 'Cliente',
                         compras: cliente.ComprasTotales
                     })
+
                 } else if (empresa.addressEmpresa !== '0x0000000000000000000000000000000000000000') {
                     setUserInfo({
                         address: accounts[0],
@@ -61,70 +82,84 @@ const Header = () => {
             }
         }
     }
-
     const disconnectWallet = () => {
         setUserInfo(null)
         setIsConnected(false)
         setCurrentAddress(null)
     }
-
     return (
         <>
-            <nav className="bg-gray-800 shadow-lg">
-                <div className="max-w-7xl mx-auto px-4">
-                    <div className="flex justify-between items-center h-16">
-                        <div className="flex-shrink-0">
-                            <Link
-                                to="/"
-                                className="text-xl font-bold text-white hover:text-gray-300 transition duration-300"
-                            >
+            <div className="relative">
+                <nav className={theme.nav.container}>
+                    <span className={theme.nav.gradient} />
+                    <div className={`${theme.card.content} mx-auto px-4`}>
+                        <div className="flex justify-between items-center h-16">
+                            <Link to="/" className={`${theme.neonText.title} ${theme.animations.glitch}`}>
                                 Web3 Shop
                             </Link>
-                        </div>
 
-
-                        <div className="flex items-center space-x-4">
-                            {!isConnected ? (
-                                <button
-                                    onClick={connectWallet}
-                                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-300"
-                                >
-                                    Connect Wallet
-                                </button>
-                            ) : userInfo ? (
-                                <div className="flex items-center space-x-4">
-
-                                    <span className="text-white">{userInfo.type}: {userInfo.type === 'Empresa' ? userInfo.name : ''}</span>
-                                    <span className="text-gray-400">{userInfo.address.slice(0, 6)}...{userInfo.address.slice(-4)}</span>
-
-                                    <button
-                                        onClick={disconnectWallet}
-                                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-300"
-                                    >
-                                        Disconnect Wallet
+                            <div className="flex items-center space-x-4">
+                                {!isConnected ? (
+                                    <button onClick={connectWallet} className={theme.button.primary}>
+                                        <span className={theme.button.primaryGradient} />
+                                        <span className={theme.button.content}>
+                                            <WalletIcon className="h-5 w-5" />
+                                        </span>
                                     </button>
-                                    <Link
-                                        to="/dashboard"
-                                        className=" p-2 rounded-md hover:bg-blue-700 transition duration-300"
-                                    >
-                                        <Cog6ToothIcon className="h-6 w-6 text-white" />
-                                    </Link>
-                                </div>
-                            ) : (
-                                <div className="flex items-center space-x-4">
-                                    <span className="text-gray-400">{currentAddress.slice(0, 6)}...{currentAddress.slice(-4)}</span>
-                                    <button
-                                        onClick={() => setIsModalOpen(true)}
-                                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-300"
-                                    >
-                                        Register
+                                ) : userInfo ? (
+                                    <div className="flex items-center space-x-4">
+                                        <Link to="/dashboard" className={theme.button.secondary}>
+                                            <span className={theme.button.secondaryGradient} />
+                                            <span className={theme.button.content}>
+                                                <Cog6ToothIcon className="h-5 w-5" />
+                                            </span>
+                                        </Link>
+                                        <button onClick={disconnectWallet} className={theme.button.primary}>
+                                            <span className={theme.button.primaryGradient} />
+                                            <span className={theme.button.content}>
+                                                <PowerIcon className="h-5 w-5 text-red-500" />
+                                            </span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setIsModalOpen(true)} className={theme.button.secondary}>
+                                        <span className={theme.button.secondaryGradient} />
+                                        <span className={theme.button.content}>
+                                            Register
+                                        </span>
+                                    </button>
+                                )}
+                                <div ref={cartRef} className="relative z-50">
+                                    <button onClick={() => setIsCartOpen(!isCartOpen)} className={theme.button.primary}>
+                                        <span className={theme.button.primaryGradient} />
+                                        <span className={theme.button.content}>
+                                            <ShoppingCartIcon className="h-5 w-5" />
+                                            {cartItems.length > 0 && (
+                                                <span className={`absolute -top-1 -right-1 ${theme.animations.cartBadge} text-white text-xs rounded-full h-5 w-5 flex items-center justify-center`}>
+                                                    {cartItems.length}
+                                                </span>
+                                            )}
+                                        </span>
                                     </button>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </nav>
+                </nav>
+                <div className={`${theme.divider.gradient} ${theme.animations.neonPulse}`} />
+            </div>
+
+            {isCartOpen && (
+                <>
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 z-40"
+                        onClick={() => setIsCartOpen(false)}
+                    />
+                    <div className={`fixed right-0 top-0 h-full w-[90%] xs:w-[80%] sm:w-96 md:w-80 bg-gray-900 shadow-xl ${theme.animations.slideIn} z-50`}>
+                        <ShoppingCart />
+                    </div>
+                </>
+            )}
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <RegisterForm onClose={() => setIsModalOpen(false)} />

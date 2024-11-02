@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import bodyParser from 'body-parser'
 import Web3 from 'web3'
+import paymentRoutes from './payment.js'
 
 // Web3 and Network Configuration
 const AMOY_RPC_URL = 'https://rpc-amoy.polygon.technology'
@@ -13,8 +14,8 @@ const amoyNetwork = {
     chainName: 'Amoy Testnet',
     rpcUrls: [AMOY_RPC_URL],
     nativeCurrency: {
-        name: 'AMOY',
-        symbol: 'AMOY',
+        name: 'POL',
+        symbol: 'POL',
         decimals: 18
     },
     blockExplorerUrls: ['https://amoy.blockscout.com']
@@ -98,6 +99,7 @@ app.post('/api/register', async (req, res) => {
     }
 })
 
+app.use('/payment', paymentRoutes)
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`)

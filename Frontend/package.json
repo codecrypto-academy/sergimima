@@ -10,9 +10,28 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@babel/plugin-transform-class-properties": "^7.25.9",
+    "@babel/plugin-transform-nullish-coalescing-operator": "^7.25.9",
+    "@babel/plugin-transform-optional-chaining": "^7.25.9",
+    "@helia/unixfs": "^4.0.0",
     "@heroicons/react": "^2.1.5",
+    "@tsparticles/basic": "^3.5.0",
+    "@tsparticles/engine": "^3.5.0",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.5.0",
+    "glob": "^11.0.0",
+    "helia": "^5.1.0",
+    "ipfs-http-client": "^60.0.1",
+    "lru-cache": "^11.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-particles": "^2.12.2",
+    "react-tsparticles": "^2.9.3",
+    "rimraf": "^6.0.1",
+    "tsparticles": "^2.9.3",
+    "tsparticles-interaction-external-attract": "^2.12.0",
+    "tsparticles-interaction-external-bounce": "^2.12.0",
+    "tsparticles-interaction-external-bubble": "^2.12.0",
     "web3": "^4.14.0"
   },
   "devDependencies": {

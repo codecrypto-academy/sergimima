@@ -3,5 +3,14 @@
 @tailwind utilities;
 
 body {
-  @apply bg-gray-900 text-white;
+  @apply bg-gray-900 text-white min-h-screen;
+}
+
+#tsparticles {
+  position: fixed !important;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
 }
